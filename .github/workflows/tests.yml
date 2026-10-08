@@ -33,15 +33,12 @@ jobs:
           chrome-version: stable
 
       - name: Chạy test (headless, trên mock login)
-        run: |
-          pytest --html=report.html --self-contained-html --junitxml=junit.xml
+        run: pytest   # report tự sinh vào reports/ theo cấu hình pytest.ini
 
       - name: Lưu báo cáo test (HTML + JUnit)
         if: always()   # upload kể cả khi test fail
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: |
-            report.html
-            junit.xml
+          path: reports/
           retention-days: 14

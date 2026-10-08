@@ -13,7 +13,7 @@
           border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
     .remember{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:14px}
     .remember input{margin:0}
-    button{width:100%;padding:10px;background:#2f5496;color:#fff;border:0;
+    input.submit_login{width:100%;padding:10px;background:#2f5496;color:#fff;border:0;
            border-radius:6px;font-size:15px;cursor:pointer}
     #error{color:#c00;font-size:13px;min-height:18px;margin-top:4px}
   </style>
@@ -22,31 +22,29 @@
   <div class="box">
     <h2>Đăng nhập</h2>
     <label>Tên đăng nhập</label>
-    <input id="username" type="text" autocomplete="off">
+    <input id="username" name="username" type="text" autocomplete="off">
     <label>Mật khẩu</label>
-    <input id="password" type="password" autocomplete="off">
+    <input id="password" name="userpwd" type="password" autocomplete="off">
     <div class="remember">
-      <input id="remember" type="checkbox">
+      <input id="remember" name="remember" type="checkbox">
       <label for="remember">Giữ tôi luôn đăng nhập</label>
     </div>
-    <button id="submit">Đăng nhập</button>
+    <input id="submit" class="submit_login" type="button" value="Đăng nhập">
     <div id="error"></div>
   </div>
 
   <script>
     // ======================================================================
-    // TRANG LOGIN GIẢ LẬP (MOCK) - mô phỏng hành vi trang Văn phòng điện tử
-    // Mục đích: để tự động hoá kiểm thử AN TOÀN, chạy offline, KHÔNG đánh
-    // vào server thật của trường.
+    // TRANG LOGIN GIẢ LẬP (MOCK) - mô phỏng hành vi trang Văn phòng điện tử.
+    // Dùng đúng name/class như trang thật (username, userpwd, submit_login)
+    // để Page Object giống hệt slide, nhưng chạy OFFLINE, không đụng server.
     // ======================================================================
 
     var VALID_USER = "student";
     var VALID_PASS = "Password123";
 
-    // --- Mô phỏng "Giữ tôi luôn đăng nhập" ---
-    // Khi mở lại trang login: nếu trước đó đã đăng nhập VÀ có tick "giữ đăng
-    // nhập" (lưu ở localStorage -> tồn tại qua các lần mở lại trình duyệt),
-    // thì vào thẳng trang chủ, không cần đăng nhập lại.
+    // Mô phỏng "Giữ tôi luôn đăng nhập": nếu đã đăng nhập + tick giữ
+    // (lưu ở localStorage) thì mở lại vào thẳng trang chủ.
     try {
       if (localStorage.getItem("remember_login") === "1") {
         window.location.href = "logged-in-successfully.html";
@@ -54,11 +52,10 @@
     } catch (e) {}
 
     document.getElementById("submit").addEventListener("click", function () {
-      // Lấy input dưới dạng CHUỖI thuần (.value) -> không diễn giải như lệnh.
-      // Đây chính là điểm giúp trang an toàn trước SQL Injection / XSS:
-      // mọi payload chỉ được so sánh chuỗi, không thực thi.
-      var u = document.getElementById("username").value;
-      var p = document.getElementById("password").value;
+      // Lấy input dạng CHUỖI thuần (.value) -> không diễn giải như lệnh.
+      // Đây là điểm giúp trang an toàn trước SQL Injection / XSS.
+      var u = document.getElementsByName("username")[0].value;
+      var p = document.getElementsByName("userpwd")[0].value;
       var remember = document.getElementById("remember").checked;
       var err = document.getElementById("error");
 
@@ -68,13 +65,8 @@
       }
       if (u === VALID_USER && p === VALID_PASS) {
         try {
-          if (remember) {
-            // Tick giữ đăng nhập -> lưu bền (localStorage): mở lại vẫn còn.
-            localStorage.setItem("remember_login", "1");
-          } else {
-            // Không tick -> không lưu bền: mở lại phải đăng nhập lại.
-            localStorage.removeItem("remember_login");
-          }
+          if (remember) localStorage.setItem("remember_login", "1");
+          else localStorage.removeItem("remember_login");
         } catch (e) {}
         window.location.href = "logged-in-successfully.html";
       } else {

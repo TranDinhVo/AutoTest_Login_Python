@@ -1,97 +1,87 @@
-"""Page Object cho trang Đăng nhập.
+"""LoginPage — Page Object cho form đăng nhập (theo mẫu POM buổi 8).
 
-Gom toàn bộ thao tác với trang login vào 1 lớp. Test chỉ gọi hàm nghiệp vụ
-(login, get_error_text...) mà không cần biết chi tiết locator -> dễ bảo trì:
-nếu trang đổi id, chỉ sửa 1 chỗ ở đây/config.ini.
+Nguyên tắc POM:
+- Locator để PRIVATE, giấu sau các method nghiệp vụ.
+- Page KHÔNG chứa assertion (chỉ cung cấp dịch vụ giao diện + trạng thái trang).
+- Fluent navigation: hành động chuyển trang trả về trang kế tiếp (DashboardPage).
 """
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
+from pages.base_page import BasePage
 
 
-class LoginPage:
+class LoginPage(BasePage):
+    # URL trang đăng nhập thật của hệ thống (khớp slide buổi 8).
+    # Khi chạy test, URL thực tế lấy từ config (mặc định là mock an toàn).
+    URL = "https://vanphongdientu.utc.edu.vn/Login"
+
+    # ----- Locators (private) — dùng đúng name/css như trang UTC -----
+    _username = (By.NAME, "username")
+    _password = (By.NAME, "userpwd")
+    _remember = (By.NAME, "remember")
+    _login_btn = (By.CSS_SELECTOR, "input.submit_login")
+    _error = (By.ID, "error")
+
     def __init__(self, driver, config):
-        self.driver = driver
+        super().__init__(driver)
         self.cfg = config
-        self.wait = WebDriverWait(driver, 10)
 
-    # ---------- Điều hướng ----------
+    # ----- Điều hướng -----
     def open(self):
-        """Mở trang login và xoá trạng thái 'giữ đăng nhập' còn sót (nếu có)."""
-        self.driver.get(self.cfg.login_url)
+        """Mở trang login; dọn trạng thái 'giữ đăng nhập' để test độc lập."""
+        self.open_url(self.cfg.login_url)
         self._clear_remember_state()
         return self
 
+    def reopen(self):
+        """Mô phỏng tắt/mở lại trình duyệt: nạp lại trang login."""
+        self.open_url(self.cfg.login_url)
+        return self
+
     def _clear_remember_state(self):
-        """Dọn localStorage của trang mock để các test độc lập nhau."""
         if self.cfg.is_mock:
             try:
-                self.driver.execute_script("window.localStorage.clear();")
-                self.driver.get(self.cfg.login_url)
+                self.run_js("window.localStorage.clear();")
+                self.open_url(self.cfg.login_url)
             except Exception:
                 pass
 
-    def reopen(self):
-        """Mô phỏng 'tắt trình duyệt rồi mở lại': nạp lại trang login."""
-        self.driver.get(self.cfg.login_url)
-        return self
+    # ----- Thao tác từng phần (dùng cho ca nhập thiếu) -----
+    def fill_username(self, value):
+        return self.type(self._username, value)
 
-    # ---------- Thao tác với các ô nhập ----------
-    def _username(self):
-        return self.wait.until(EC.presence_of_element_located((By.ID, self.cfg.username_id)))
-
-    def _password(self):
-        return self.driver.find_element(By.ID, self.cfg.password_id)
-
-    def enter_username(self, value):
-        el = self._username()
-        el.clear()
-        el.send_keys(value)
-        return self
-
-    def enter_password(self, value):
-        el = self._password()
-        el.clear()
-        el.send_keys(value)
-        return self
+    def fill_password(self, value):
+        return self.type(self._password, value)
 
     def set_remember(self, checked):
-        try:
-            box = self.driver.find_element(By.ID, self.cfg.remember_id)
-            if box.is_selected() != checked:
-                box.click()
-        except Exception:
-            pass  # Trang không có ô 'giữ đăng nhập' -> bỏ qua
-        return self
+        return self.set_checkbox(self._remember, checked)
 
-    def click_submit(self):
-        self.driver.find_element(By.ID, self.cfg.submit_id).click()
-        return self
+    def click_login(self):
+        return self.click(self._login_btn)
 
-    # ---------- Hành động nghiệp vụ gộp ----------
-    def login(self, username, password, remember=False):
+    # ----- Method nghiệp vụ chính (fluent: trả về trang kế tiếp) -----
+    def login_as(self, username, password, remember=False):
+        """Nhập thông tin + bấm đăng nhập, trả về DashboardPage.
+
+        (Với ca sai thông tin, trang vẫn ở login — kiểm tra bằng
+        is_on_login_page()/error_message() trên chính LoginPage.)
+        """
         if username is not None:
-            self.enter_username(username)
+            self.fill_username(username)
         if password is not None:
-            self.enter_password(password)
+            self.fill_password(password)
         self.set_remember(remember)
-        self.click_submit()
-        return self
+        self.click_login()
+        from pages.dashboard_page import DashboardPage  # import trễ, tránh vòng lặp
+        return DashboardPage(self.driver, self.cfg)
 
-    # ---------- Lấy kết quả / kiểm chứng ----------
-    def get_error_text(self):
-        try:
-            return self.driver.find_element(By.ID, self.cfg.error_id).text.strip()
-        except Exception:
-            return ""
+    # ----- Trạng thái trang (không phải assertion) -----
+    def error_message(self):
+        return self.get_text(self._error)
 
-    def is_logged_in(self):
-        """True nếu đã chuyển sang trang chủ (URL chứa chuỗi success)."""
-        try:
-            self.wait.until(EC.url_contains(self.cfg.success_url_contains))
-            return True
-        except Exception:
-            return self.cfg.success_url_contains in self.driver.current_url
+    def logged_in(self):
+        """True nếu đã rời trang login sang trang chủ (URL chứa chuỗi success)."""
+        return self.url_contains(self.cfg.success_url_contains)
 
-    def current_url(self):
-        return self.driver.current_url
+    def is_on_login_page(self):
+        return self.cfg.success_url_contains not in self.current_url()

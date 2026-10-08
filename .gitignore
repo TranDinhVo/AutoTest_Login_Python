@@ -5,9 +5,11 @@ __pycache__/
 venv/
 env/
 
-# Pytest / báo cáo
+# Pytest / báo cáo (sinh tự động giống target/surefire-reports bên Java)
 .pytest_cache/
+reports/
 report.html
+junit.xml
 assets/
 
 # IDE

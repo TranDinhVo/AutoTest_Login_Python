@@ -19,12 +19,7 @@ class Config:
         self.valid_username = t.get("valid_username", "student")
         self.valid_password = t.get("valid_password", "Password123")
 
-        self.username_id = t.get("username_id", "username")
-        self.password_id = t.get("password_id", "password")
-        self.remember_id = t.get("remember_id", "remember")
-        self.submit_id = t.get("submit_id", "submit")
-        self.error_id = t.get("error_id", "error")
-
+        # (Locator được khai báo trong các Page Object, không còn ở config.)
         self.success_url_contains = t.get("success_url_contains", "logged-in-successfully")
         self.headless = t.getboolean("headless", fallback=True)
         self.browser = t.get("browser", "chrome").strip().lower()

@@ -8,10 +8,15 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Quyền cần thiết để deploy GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,10 +40,33 @@ jobs:
       - name: Chạy test (headless, trên mock login)
         run: pytest   # report tự sinh vào reports/ theo cấu hình pytest.ini
 
-      - name: Lưu báo cáo test (HTML + JUnit)
-        if: always()   # upload kể cả khi test fail
+      - name: Lưu báo cáo test (HTML + JUnit) làm artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-report
           path: reports/
           retention-days: 14
+
+      - name: Chuẩn bị trang Pages (report.html -> index.html)
+        if: always()
+        run: cp reports/report.html reports/index.html
+
+      - name: Đóng gói report cho GitHub Pages
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports
+
+  # Deploy report lên GitHub Pages (chạy sau job test, kể cả khi có test fail)
+  deploy:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy lên GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

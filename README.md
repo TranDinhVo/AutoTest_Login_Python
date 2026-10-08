@@ -4,7 +4,7 @@ Dự án kiểm thử tự động chức năng **Đăng nhập** của trang
 [vanphongdientu.utc.edu.vn](https://vanphongdientu.utc.edu.vn/) bằng
 **Python + Selenium + pytest**, kèm **bảng test case Excel**.
 
-## ⚠️ Nguyên tắc an toàn (đọc trước khi chạy)
+## Nguyên tắc an toàn (đọc trước khi chạy)
 
 - Automation chạy mặc định trên **bản MOCK login đóng gói sẵn** trong
   `mock_login/` (chạy offline, **không đụng server thật của trường**).
@@ -83,7 +83,7 @@ Mỗi lần chạy `pytest` tự sinh báo cáo vào thư mục `reports/`:
 
 Trên GitHub Actions, báo cáo được lưu làm *artifact* `test-report` (tải về ở tab Actions).
 
-## Ánh xạ test case ↔ code
+## Ánh xạ test case - code
 
 | Bảng Excel (sheet) | File test |
 |---|---|

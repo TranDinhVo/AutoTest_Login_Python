@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập thành công</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#eafaf0;display:flex;
+         justify-content:center;align-items:center;height:100vh;margin:0}
+    .box{background:#fff;padding:40px;border-radius:10px;text-align:center;
+         box-shadow:0 4px 18px rgba(0,0,0,.12)}
+    h1{color:#1e7e34}
+    button{margin-top:16px;padding:8px 16px;border:0;border-radius:6px;
+           background:#2f5496;color:#fff;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Đăng nhập thành công!</h1>
+    <p>Xin chào, bạn đã vào trang chủ hệ thống.</p>
+    <button id="logout">Đăng xuất</button>
+  </div>
+  <script>
+    // Đăng xuất: xoá cờ "giữ đăng nhập" rồi quay về trang login.
+    document.getElementById("logout").addEventListener("click", function () {
+      try { localStorage.removeItem("remember_login"); } catch (e) {}
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

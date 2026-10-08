@@ -36,10 +36,20 @@ def _no_alert(driver):
 # ===================== SQL INJECTION =====================
 
 SQLI_PAYLOADS = {
-    "SEC01_or_1_eq_1_username": ("' OR '1'='1", "x"),
-    "SEC02_comment_bypass":     ("admin'--", "x"),
-    "SEC03_or_1_eq_1_password": ("student", "' OR '1'='1"),
-    "SEC04_drop_table":         ("'; DROP TABLE users;--", "x"),
+    # --- Nhóm cơ bản ---
+    "SEC01_or_1_eq_1_username":  ("' OR '1'='1", "x"),
+    "SEC02_comment_bypass":      ("admin'--", "x"),
+    "SEC03_or_1_eq_1_password":  ("student", "' OR '1'='1"),
+    "SEC04_drop_table":          ("'; DROP TABLE users;--", "x"),
+    # --- Nhóm bổ sung ---
+    "SEC08_or_1_eq_1_comment":   ("' OR 1=1--", "x"),         # điều kiện luôn đúng + chú thích
+    "SEC09_admin_hash_comment":  ("admin'#", "x"),            # chú thích kiểu MySQL (#)
+    "SEC10_union_select":        ("' UNION SELECT 1,2,3--", "x"),  # UNION-based
+    "SEC11_quote_empty_eq":      ("' OR ''='", "x"),          # so sánh rỗng = rỗng
+    "SEC12_paren_bypass":        ('") OR ("1"="1', "x"),      # thoát dấu ngoặc
+    "SEC13_double_quote_pass":   ("student", '" OR ""="'),    # payload ở password dùng nháy kép
+    "SEC14_time_based_blind":    ("'; WAITFOR DELAY '0:0:5'--", "x"),  # time-based blind
+    "SEC15_stacked_update":      ("x'; UPDATE users SET pass='1'--", "x"),  # stacked query
 }
 
 

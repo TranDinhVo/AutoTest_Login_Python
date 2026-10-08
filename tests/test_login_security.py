@@ -54,3 +54,25 @@ def test_sql_injection_khong_bypass(login_page, config, case):
     )
     # Vẫn phải có thông báo lỗi bình thường (không lộ lỗi hệ thống/stacktrace)
     assert login_page.get_error_text() != ""
+
+
+# ===================== XSS (Cross-Site Scripting) =====================
+
+XSS_PAYLOADS = {
+    "SEC05_script_tag":   "<script>alert(1)</script>",
+    "SEC06_img_onerror":  '"><img src=x onerror=alert(1)>',
+}
+
+
+@pytest.mark.parametrize("case", list(XSS_PAYLOADS), ids=list(XSS_PAYLOADS))
+def test_xss_khong_thuc_thi_ma(login_page, config, case):
+    """SEC05-SEC06: payload XSS KHÔNG được chạy (không có alert), không đăng nhập."""
+    payload = XSS_PAYLOADS[case]
+    login_page.login(payload, "x")
+
+    # 1) Không có hộp alert bật lên -> mã JS không được thực thi
+    assert _no_alert(login_page.driver), (
+        f"[{case}] Payload XSS đã thực thi (xuất hiện alert)!"
+    )
+    # 2) Không được đăng nhập bằng payload
+    assert not login_page.is_logged_in()

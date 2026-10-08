@@ -58,3 +58,38 @@ def test_TC09_matkhau_phan_biet_hoa_thuong(login_page, config):
     """TC09: password đúng ký tự nhưng sai hoa/thường -> đăng nhập thất bại."""
     login_page.login(config.valid_username, config.valid_password.lower())
     assert not login_page.is_logged_in(), "Mật khẩu phải phân biệt hoa/thường"
+
+
+# ============== NHÓM 3: ĐĂNG NHẬP THÀNH CÔNG & GIỮ ĐĂNG NHẬP ==============
+
+def test_TC07_dang_nhap_dung_khong_giu_dang_nhap(login_page, config):
+    """TC07: đăng nhập đúng, KHÔNG tick giữ đăng nhập.
+    -> vào trang chủ; mở lại trình duyệt phải đăng nhập lại.
+    """
+    login_page.login(config.valid_username, config.valid_password, remember=False)
+    assert login_page.is_logged_in(), "Phải vào được trang chủ"
+
+    # Mô phỏng tắt/mở lại trình duyệt: không giữ đăng nhập -> hiện lại form login
+    login_page.reopen()
+    assert not login_page.is_logged_in(), "Không giữ đăng nhập thì phải đăng nhập lại"
+
+
+def test_TC08_dang_nhap_dung_co_giu_dang_nhap(login_page, config):
+    """TC08: đăng nhập đúng, CÓ tick giữ đăng nhập.
+    -> vào trang chủ; mở lại trình duyệt vào thẳng trang chủ, không cần đăng nhập lại.
+    """
+    login_page.login(config.valid_username, config.valid_password, remember=True)
+    assert login_page.is_logged_in(), "Phải vào được trang chủ"
+
+    # Mô phỏng tắt/mở lại trình duyệt: giữ đăng nhập -> vào thẳng trang chủ
+    login_page.reopen()
+    assert login_page.is_logged_in(), "Giữ đăng nhập thì không phải đăng nhập lại"
+
+
+def test_TC10_username_co_khoang_trang_thua(login_page, config):
+    """TC10: username có khoảng trắng thừa đầu/cuối.
+    Mock so khớp chuỗi chính xác (không trim) -> đăng nhập thất bại.
+    (Hệ thống thật nên trim hoặc báo sai một cách nhất quán.)
+    """
+    login_page.login("  " + config.valid_username + "  ", config.valid_password)
+    assert not login_page.is_logged_in()

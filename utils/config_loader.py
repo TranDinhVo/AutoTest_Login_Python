@@ -1,6 +1,7 @@
 """Đọc cấu hình từ config.ini và tính ra URL trang login cần kiểm thử."""
 import configparser
 import os
+from pathlib import Path
 from urllib.parse import urlparse
 
 # Thư mục gốc dự án (chứa config.ini, mock_login/, ...)
@@ -40,7 +41,8 @@ class Config:
         """URL thật dùng cho driver.get(). MOCK -> file:// tới mock_login/login.html."""
         if self.is_mock:
             page = os.path.join(ROOT_DIR, "mock_login", "login.html")
-            return "file:///" + page.replace("\\", "/")
+            # as_uri() tạo URL file:// đúng chuẩn trên cả Windows và Linux (CI)
+            return Path(page).as_uri()
         return self.base_url_raw
 
     @property

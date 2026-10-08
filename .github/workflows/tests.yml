@@ -1,0 +1,47 @@
+name: Selenium Tests
+
+# Chạy khi push/PR vào main, hoặc bấm chạy tay (workflow_dispatch)
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cài đặt thư viện
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Cài đặt Google Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Chạy test (headless, trên mock login)
+        run: |
+          pytest --html=report.html --self-contained-html --junitxml=junit.xml
+
+      - name: Lưu báo cáo test (HTML + JUnit)
+        if: always()   # upload kể cả khi test fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            report.html
+            junit.xml
+          retention-days: 14
